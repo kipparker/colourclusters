@@ -18,3 +18,5 @@ node_modules
 .serverless
 
 client
+
+.DS_Store

@@ -1,0 +1,91 @@
+service: colourclusters-api
+
+plugins:
+  - serverless-domain-manager
+custom:
+  physicalEnv: ${env:PHYSICAL_ENV, 'dev'}
+  customDomain:
+    domainName: colourclusters.fifthcontinent.io
+    basePath: ""
+    stage: ${self:provider.stage}
+    createRoute53Record: true
+    endpointType: "regional"
+    securityPolicy: tls_1_2
+provider:
+  name: aws
+  runtime: python3.8
+  stage: dev
+  profile: colourclusters-deploy-user
+  region: eu-west-2
+  iam:
+    role:
+      name: colourclusters-api-lambda-role
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "s3:*"
+          Resource:
+            Fn::Join:
+              - ""
+              - - "arn:aws:s3:::"
+                - Ref: S3UploadBucket
+                - "/*"
+        - Effect: Allow
+          Action:
+            - "ecr:*"
+          Resource: "*"
+    deploymentRole: arn:aws:iam::770939158196:role/colourclustersDeploymentRole
+  deploymentBucket:
+    name: colourclusters-sls-deployment
+    maxPreviousDeploymentArtifacts: 10
+  ecr:
+    images:
+      platform: linux/amd64
+      colourclusters:
+        path: ./
+  deploymentPrefix: artefacts/serverless/colourclusters/
+  apiGateway:
+    binaryMediaTypes:
+      - "multipart/form-data"
+
+package:
+  patterns:
+    - "!./**"
+    - "*.py"
+
+functions:
+  app:
+    name: colourclusters-api-handler
+    description: ColourClusters API
+    environment:
+      TELEGRAM_KEY: ${env:TELEGRAM_KEY}
+      CHAT_ID: ${env:CHAT_ID}
+      MONGO_PASSWD: ${env:MONGO_PASSWD}
+      MONGO_USER: ${env:MONGO_USER}
+      MONGO_DOMAIN: ${env:MONGO_DOMAIN}
+      AUTH0_CLIENT_ID: ${env:AUTH0_CLIENT_ID}
+      AUTH0_CLIENT_SECRET: ${env:AUTH0_CLIENT_SECRET}
+    image:
+      name: colourclusters
+    events: # events trigger lambda functions
+      - http: # this is an API Gateway HTTP event trigger
+          path: /
+          method: ANY
+          cors: true
+      - http: # all routes get proxied to the Express router
+          path: /{proxy+}
+          method: ANY
+          cors: true
+resources:
+  Resources:
+    S3UploadBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: colourclusters-api-upload
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+        VersioningConfiguration:
+          Status: Enabled

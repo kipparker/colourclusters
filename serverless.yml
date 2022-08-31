@@ -11,6 +11,8 @@ custom:
     createRoute53Record: true
     endpointType: "regional"
     securityPolicy: tls_1_2
+  secrets: ${ssm:/aws/reference/secretsmanager/dev/colourclusters}
+
 provider:
   name: aws
   runtime: python3.8
@@ -58,13 +60,13 @@ functions:
     name: colourclusters-api-handler
     description: ColourClusters API
     environment:
-      TELEGRAM_KEY: ${env:TELEGRAM_KEY}
-      CHAT_ID: ${env:CHAT_ID}
-      MONGO_PASSWD: ${env:MONGO_PASSWD}
-      MONGO_USER: ${env:MONGO_USER}
-      MONGO_DOMAIN: ${env:MONGO_DOMAIN}
-      AUTH0_CLIENT_ID: ${env:AUTH0_CLIENT_ID}
-      AUTH0_CLIENT_SECRET: ${env:AUTH0_CLIENT_SECRET}
+      TELEGRAM_KEY: ${self:custom.secrets.TELEGRAM_KEY}
+      CHAT_ID: ${self:custom.secrets.CHAT_ID}
+      MONGO_PASSWD: ${self:custom.secrets.MONGO_PASSWD}
+      MONGO_USER: ${self:custom.secrets.MONGO_USER}
+      MONGO_DOMAIN: ${self:custom.secrets.MONGO_DOMAIN}
+      AUTH0_CLIENT_ID: ${self:custom.secrets.AUTH0_CLIENT_ID}
+      AUTH0_CLIENT_SECRET: ${self:custom.secrets.AUTH0_CLIENT_SECRET}
     image:
       name: colourclusters
     events: # events trigger lambda functions

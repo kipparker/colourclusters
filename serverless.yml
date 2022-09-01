@@ -68,6 +68,7 @@ functions:
       AUTH0_CLIENT_SECRET: ${self:custom.secrets.AUTH0_CLIENT_SECRET}
     image:
       name: colourclusters
+    timeout: 60
     events: # events trigger lambda functions
       - http: # this is an API Gateway HTTP event trigger
           path: /

@@ -69,6 +69,7 @@ functions:
     image:
       name: colourclusters
     timeout: 60
+    memorySize: 256
     events: # events trigger lambda functions
       - http: # this is an API Gateway HTTP event trigger
           path: /
